@@ -3,7 +3,7 @@ name: Deploy API to Virtual Machine
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
