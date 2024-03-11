@@ -75,5 +75,6 @@ jobs:
         EOF
         
         # Clean up
-        rm -f deploy_key
+        Remove-Item -Path deploy_key
+      shell: pwsh
 
