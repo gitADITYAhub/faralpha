@@ -11,6 +11,7 @@
 
 #     steps:
 #     - uses: actions/checkout@v2
+
 #     - name: Set up Node.js
 #       uses: actions/setup-node@v1
 #       with:
@@ -20,18 +21,23 @@
 #       run: npm install
 
 #     - name: Deploy to Virtual Machine
-#       uses: appleboy/ssh-action@master
-#       with:
-#         host: ${{ secrets.HOST }}
-#         username: ${{ secrets.USERNAME }}
-#         key: ${{ secrets.SSH_KEY }}
-#         port: 22
-#         script: |
+#       env:
+#         HOST: ${{ secrets.HOST }}
+#         USERNAME: ${{ secrets.USERNAME }}
+#         SSH_KEY: ${{ secrets.SSH_KEY }}
+#       run: |
+#         echo "$SSH_KEY" | base64 --decode > deploy_key
+#         chmod 600 deploy_key
+        
+#         ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST << 'EOF'
 #           cd /home/azureuser/myapp
 #           git pull
 #           npm install
 #           pm2 restart all
-
+#         EOF
+        
+#         rm -f deploy_key
+#       shell: bash
 
 name: Deploy API to Virtual Machine
 
@@ -55,24 +61,28 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Deploy to Virtual Machine
+    - name: Prepare SSH Key
       env:
-        HOST: ${{ secrets.HOST }}
-        USERNAME: ${{ secrets.USERNAME }}
         SSH_KEY: ${{ secrets.SSH_KEY }}
       run: |
         echo "$SSH_KEY" | base64 --decode > deploy_key
         chmod 600 deploy_key
-        
+
+    - name: Deploy to Virtual Machine
+      env:
+        HOST: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USERNAME }}
+      run: |
         ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST << 'EOF'
           cd /home/azureuser/myapp
           git pull
           npm install
-          pm2 restart all
+          pm2 restart all || pm2 start /home/azureuser/myapp/index.js --name myapp
         EOF
-        
-        rm -f deploy_key
-      shell: bash
+
+    - name: Clean up SSH Key
+      run: rm -f deploy_key
+
 
       
 
