@@ -1,46 +1,46 @@
-name: Deploy API to Virtual Machine
+# name: Deploy API to Virtual Machine
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
 
-    steps: 
-    - uses: actions/checkout@v2
+#     steps: 
+#     - uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
+#     - name: Set up Node.js
+#       uses: actions/setup-node@v2
+#       with:
+#         node-version: '14'
 
-    - name: Install dependencies
-      run: npm install
+#     - name: Install dependencies
+#       run: npm install
 
-    - name: Decode SSH Key
-      env:
-        SSH_KEY: ${{ secrets.SSH_KEY }}
-      run: |
-        echo "$SSH_KEY" > deploy_key
-        chmod 600 deploy_key
+#     - name: Decode SSH Key
+#       env:
+#         SSH_KEY: ${{ secrets.SSH_KEY }}
+#       run: |
+#         echo "$SSH_KEY" > deploy_key
+#         chmod 600 deploy_key
 
-    - name: Deploy to Virtual Machine
-      env:
-        HOST: ${{ secrets.HOST }}
-        USERNAME: ${{ secrets.USERNAME }}
-      run: |
-        ssh -o StrictHostKeyChecking=no azureuser@20.2.219.6 << 'EOF'
-          cd /home/azureuser/myapp || exit
-          git pull || git clone https://github.com/gitADITYAhub/faralpha.git /home/azureuser/myapp && cd /home/azureuser/myapp
-          npm install
-          pm2 restart all || pm2 start index.js --name myapp
-        EOF
+#     - name: Deploy to Virtual Machine
+#       env:
+#         HOST: ${{ secrets.HOST }}
+#         USERNAME: ${{ secrets.USERNAME }}
+#       run: |
+#         ssh -o StrictHostKeyChecking=no azureuser@20.2.219.6 << 'EOF'
+#           cd /home/azureuser/myapp || exit
+#           git pull || git clone https://github.com/gitADITYAhub/faralpha.git /home/azureuser/myapp && cd /home/azureuser/myapp
+#           npm install
+#           pm2 restart all || pm2 start index.js --name myapp
+#         EOF
 
-    - name: Clean up SSH Key
-      run: rm -f deploy_key
+#     - name: Clean up SSH Key
+#       run: rm -f deploy_key
 # name: Deploy to VM
 
 # on:
@@ -68,3 +68,40 @@ jobs:
 #           npm install  # Install dependencies
 #           pm2 restart all  # Restart your application with pm2 or any process manager you use
 #         EOF
+name: Deploy API to Virtual Machine
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps: 
+    - uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Deploy to Virtual Machine
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          cd /home/azureuser/myapp || exit
+          if [ -d .git ]; then
+            git pull
+          else
+            git clone https://github.com/gitADITYAhub/faralpha.git /home/azureuser/myapp && cd /home/azureuser/myapp
+          fi
+          npm install
+          pm2 restart all || pm2 start index.js --name myapp
