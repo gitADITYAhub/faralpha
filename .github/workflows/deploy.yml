@@ -27,7 +27,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         port: 22
         script: |
-          cd /path/to/your/deployment
+          cd /home/azureuser/myapp
           git pull
           npm install
           pm2 restart all
