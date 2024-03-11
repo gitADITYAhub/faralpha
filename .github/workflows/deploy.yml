@@ -1,44 +1,3 @@
-# name: Deploy API to Virtual Machine
-
-# on:
-#   push:
-#     branches:
-#       - main
-
-# jobs:
-#   deploy:
-#     runs-on: self-hosted
-
-#     steps:
-#     - uses: actions/checkout@v2
-
-#     - name: Set up Node.js
-#       uses: actions/setup-node@v1
-#       with:
-#         node-version: '14'
-
-#     - name: Install dependencies
-#       run: npm install
-
-#     - name: Deploy to Virtual Machine
-#       env:
-#         HOST: ${{ secrets.HOST }}
-#         USERNAME: ${{ secrets.USERNAME }}
-#         SSH_KEY: ${{ secrets.SSH_KEY }}
-#       run: |
-#         echo "$SSH_KEY" | base64 --decode > deploy_key
-#         chmod 600 deploy_key
-        
-#         ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST << 'EOF'
-#           cd /home/azureuser/myapp
-#           git pull
-#           npm install
-#           pm2 restart all
-#         EOF
-        
-#         rm -f deploy_key
-#       shell: bash
-
 name: Deploy API to Virtual Machine
 
 on:
@@ -48,13 +7,13 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
 
     - name: Set up Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v2
       with:
         node-version: '14'
 
@@ -67,9 +26,6 @@ jobs:
       run: |
         echo "$SSH_KEY" | base64 --decode > deploy_key
         chmod 600 deploy_key
-        ls -l deploy_key # Verify file presence and permissions
-        echo "Deploy key first 100 characters:"
-        head -c 100 deploy_key | xxd # Output first few characters for format verification; remove if sensitive
 
     - name: Deploy to Virtual Machine
       env:
@@ -77,15 +33,11 @@ jobs:
         USERNAME: ${{ secrets.USERNAME }}
       run: |
         ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST << 'EOF'
-          cd /home/azureuser/myapp
-          git pull
+          cd /home/azureuser/myapp || exit
+          git pull || git clone https://github.com/gitADITYAhub/faralpha.git /home/azureuser/myapp && cd /home/azureuser/myapp
           npm install
-          pm2 restart all || pm2 start /home/azureuser/myapp/index.js --name myapp
+          pm2 restart all || pm2 start index.js --name myapp
         EOF
 
     - name: Clean up SSH Key
       run: rm -f deploy_key
-
-
-      
-
