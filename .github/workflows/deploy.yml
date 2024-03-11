@@ -97,11 +97,14 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         script: |
+         export NVM_DIR="/home/azureuser/.nvm"
+         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+         nvm use 21.7.1
          cd /home/azureuser/myapp || exit
          if [ -d .git ]; then
            git pull
          else
            git clone https://github.com/gitADITYAhub/faralpha.git /home/azureuser/myapp && cd /home/azureuser/myapp
          fi
-         /home/azureuser/.nvm/versions/node/v21.7.1/bin/npm install
-         /home/azureuser/.nvm/versions/node/v21.7.1/bin/pm2 restart all || /usr/local/bin/pm2 start index.js --name myapp
+         npm install
+         pm2 restart all || pm2 start index.js --name myapp
