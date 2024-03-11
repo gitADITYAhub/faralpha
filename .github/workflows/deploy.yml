@@ -61,12 +61,13 @@ jobs:
         USERNAME: ${{ secrets.USERNAME }}
         SSH_KEY: ${{ secrets.SSH_KEY }}
       run: |
-        # Save SSH key to a file
-        echo "$SSH_KEY" | tr -d '\r' > deploy_key
-        chmod 600 deploy_key
+        $Env:SSH_KEY | Out-File -FilePath SSH_KEY.txt
+        $bytes = [Convert]::FromBase64String((Get-Content -Path SSH_KEY.txt))
+        [IO.File]::WriteAllBytes("deploy_key", $bytes)
+        Remove-Item -Path SSH_KEY.txt
         
         # Execute SSH commands using the key
-        ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST 'bash -s' << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST << 'EOF'
           cd /home/azureuser/myapp
           git pull
           npm install
