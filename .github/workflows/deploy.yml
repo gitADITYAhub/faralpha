@@ -1,70 +1,70 @@
-# name: Deploy API to Virtual Machine
-
-# on:
-#   push:
-#     branches:
-#       - main
-
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-
-#     steps: 
-#     - uses: actions/checkout@v2
-
-#     - name: Set up Node.js
-#       uses: actions/setup-node@v2
-#       with:
-#         node-version: '14'
-
-#     - name: Install dependencies
-#       run: npm install
-
-#     - name: Decode SSH Key
-#       env:
-#         SSH_KEY: ${{ secrets.SSH_KEY }}
-#       run: |
-#         echo "$SSH_KEY" > deploy_key
-#         chmod 600 deploy_key
-
-#     - name: Deploy to Virtual Machine
-#       env:
-#         HOST: ${{ secrets.HOST }}
-#         USERNAME: ${{ secrets.USERNAME }}
-#       run: |
-#         ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST << 'EOF'
-#           cd /home/azureuser/myapp || exit
-#           git pull || git clone https://github.com/gitADITYAhub/faralpha.git /home/azureuser/myapp && cd /home/azureuser/myapp
-#           npm install
-#           pm2 restart all || pm2 start index.js --name myapp
-#         EOF
-
-#     - name: Clean up SSH Key
-#       run: rm -f deploy_key
-name: Deploy to VM
+name: Deploy API to Virtual Machine
 
 on:
   push:
     branches:
-      - main  # or the branch you want to deploy from
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    steps:
+    steps: 
     - uses: actions/checkout@v2
 
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.5.3
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
       with:
-        ssh-private-key: ${{ secrets.SSH_KEY }}
+        node-version: '14'
 
-    - name: Deploy to VM
+    - name: Install dependencies
+      run: npm install
+
+    - name: Decode SSH Key
+      env:
+        SSH_KEY: ${{ secrets.SSH_KEY }}
       run: |
-        ssh -o StrictHostKeyChecking=no azureuser@20.2.219.6 << EOF
-          cd /home/azureuser/myapp # Change this to the directory of your project on the VM
-          git pull origin main  # Ensure this matches the branch you're deploying
-          npm install  # Install dependencies
-          pm2 restart all  # Restart your application with pm2 or any process manager you use
+        echo "$SSH_KEY" > deploy_key
+        chmod 600 deploy_key
+
+    - name: Deploy to Virtual Machine
+      env:
+        HOST: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USERNAME }}
+      run: |
+        ssh -o StrictHostKeyChecking=no azureuser@20.2.219.6 << 'EOF'
+          cd /home/azureuser/myapp || exit
+          git pull || git clone https://github.com/gitADITYAhub/faralpha.git /home/azureuser/myapp && cd /home/azureuser/myapp
+          npm install
+          pm2 restart all || pm2 start index.js --name myapp
         EOF
+
+    - name: Clean up SSH Key
+      run: rm -f deploy_key
+# name: Deploy to VM
+
+# on:
+#   push:
+#     branches:
+#       - main  # or the branch you want to deploy from
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - uses: actions/checkout@v2
+
+#     - name: Set up SSH
+#       uses: webfactory/ssh-agent@v0.5.3
+#       with:
+#         ssh-private-key: ${{ secrets.SSH_KEY }}
+
+#     - name: Deploy to VM
+#       run: |
+#         ssh -o StrictHostKeyChecking=no azureuser@20.2.219.6 << EOF
+#           cd /home/azureuser/myapp # Change this to the directory of your project on the VM
+#           git pull origin main  # Ensure this matches the branch you're deploying
+#           npm install  # Install dependencies
+#           pm2 restart all  # Restart your application with pm2 or any process manager you use
+#         EOF
