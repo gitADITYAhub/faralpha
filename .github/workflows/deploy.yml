@@ -56,18 +56,14 @@ jobs:
       run: npm install
 
     - name: Deploy to Virtual Machine
-      shell: pwsh
       env:
         HOST: ${{ secrets.HOST }}
         USERNAME: ${{ secrets.USERNAME }}
         SSH_KEY: ${{ secrets.SSH_KEY }}
       run: |
-        $Env:SSH_KEY | Out-File -FilePath SSH_KEY.txt
-        $bytes = [Convert]::FromBase64String((Get-Content -Path SSH_KEY.txt))
-        [IO.File]::WriteAllBytes("deploy_key", $bytes)
-        Remove-Item -Path SSH_KEY.txt
+        echo "$SSH_KEY" | base64 --decode > deploy_key
+        chmod 600 deploy_key
         
-        # Execute SSH commands using the key
         ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST << 'EOF'
           cd /home/azureuser/myapp
           git pull
@@ -75,7 +71,8 @@ jobs:
           pm2 restart all
         EOF
         
-        # Clean up
         rm -f deploy_key
+      shell: bash
+
       
 
