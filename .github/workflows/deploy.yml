@@ -61,12 +61,15 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Prepare SSH Key
+    - name: Decode SSH Key
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
       run: |
         echo "$SSH_KEY" | base64 --decode > deploy_key
         chmod 600 deploy_key
+        ls -l deploy_key # Verify file presence and permissions
+        echo "Deploy key first 100 characters:"
+        head -c 100 deploy_key | xxd # Output first few characters for format verification; remove if sensitive
 
     - name: Deploy to Virtual Machine
       env:
